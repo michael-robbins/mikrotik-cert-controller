@@ -1,0 +1,25 @@
+log_level: info
+label_selector: "cert-controller.mikrotik.io/enabled=true"
+sync_period: 1h
+delete_policy: retain
+ssh_port: 22
+ssh_key:
+  secret_name: mikrotik-cert-controller-ssh-key
+  secret_namespace: mikrotik-cert-controller
+  secret_key: ssh-privatekey
+known_hosts_file: /etc/cert-controller/known_hosts
+insecure_ignore_host_key: false
+routers:
+  - name: router-main
+    address: 192.168.1.1
+    username: admin
+    services:
+      - type: www-ssl
+#  - name: router-branch
+#    address: 10.0.0.1
+#    username: admin
+#    ssh_port: 2222
+#    services:
+#      - type: www-ssl
+#      - type: ipsec
+#        peer_name: my-peer

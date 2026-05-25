@@ -1,0 +1,83 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mikrotik-cert-controller
+  labels:
+    app.kubernetes.io/name: mikrotik-cert-controller
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: mikrotik-cert-controller
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: mikrotik-cert-controller
+    spec:
+      serviceAccountName: mikrotik-cert-controller
+      terminationGracePeriodSeconds: 10
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65534
+        runAsGroup: 65534
+        fsGroup: 65534
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: cert-controller
+          image: ghcr.io/yannick/mikrotik-cert-controller:latest
+          args:
+            - --config=/etc/cert-controller/config.yaml
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          ports:
+            - name: metrics
+              containerPort: 8080
+              protocol: TCP
+            - name: health
+              containerPort: 8081
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: health
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: health
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi
+            limits:
+              memory: 64Mi
+          volumeMounts:
+            - name: config
+              mountPath: /etc/cert-controller
+              readOnly: true
+            - name: ssh-key
+              mountPath: /etc/cert-controller/ssh
+              readOnly: true
+      volumes:
+        - name: config
+          configMap:
+            name: mikrotik-cert-controller
+            items:
+              - key: config.yaml
+                path: config.yaml
+              - key: known_hosts
+                path: known_hosts
+        - name: ssh-key
+          secret:
+            secretName: mikrotik-cert-controller-ssh-key
+            optional: true

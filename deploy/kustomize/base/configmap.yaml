@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mikrotik-cert-controller
+data:
+  config.yaml: |
+    log_level: info
+    label_selector: "cert-controller.mikrotik.io/enabled=true"
+    sync_period: 1h
+    delete_policy: retain
+    ssh_port: 22
+    ssh_key:
+      secret_name: mikrotik-cert-controller-ssh-key
+      secret_namespace: mikrotik-cert-controller
+      secret_key: ssh-privatekey
+    known_hosts_file: /etc/cert-controller/known_hosts
+    insecure_ignore_host_key: false
+    routers: []
+  known_hosts: |
+    # Add MikroTik SSH host keys here (one per line).
+    # Obtain via: ssh-keyscan -p 22 <router-ip> 2>/dev/null
+    # 192.168.88.1 ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAA...
