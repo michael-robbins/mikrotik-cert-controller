@@ -74,7 +74,7 @@ func Connect(ctx context.Context, in ConnectInput) (Client, error) {
 		hostKeyCallback = in.HostKey.Callback()
 	}
 	if hostKeyCallback == nil {
-		hostKeyCallback = ssh.InsecureIgnoreHostKey()
+		return nil, fmt.Errorf("SSH host key verification is required but no checker was provided")
 	}
 
 	config := &ssh.ClientConfig{
