@@ -7,6 +7,7 @@ When cert-manager renews a certificate, mikrotik-cert-controller uploads the new
 ## Features
 
 - Watches Kubernetes Secrets labeled `cert-controller.mikrotik.io/enabled=true`
+- Namespace-scoped deployment (secure Role/RoleBinding and cache-scoping by default)
 - Uploads leaf certificate, private key, and intermediate chain certs separately
 - Handles MikroTik's certificate deduplication (looks up chain certs by common name)
 - Assigns certificates to RouterOS services: `www-ssl`, `api-ssl`, `ipsec`
@@ -85,6 +86,7 @@ The operator will detect the labeled Secret and sync the certificate to all conf
 |-------|---------|-------------|
 | `log_level` | `info` | Log level: `debug`, `info`, `warn`, `error` |
 | `label_selector` | `cert-controller.mikrotik.io/enabled=true` | Label selector for Secrets to watch |
+| `watch_namespace` | | Restricts the operator to watching Secrets in a single namespace (e.g. `mikrotik-certs`). If empty, watches all namespaces (cluster-scoped). |
 | `sync_period` | `1h` | How often to re-check all Secrets |
 | `delete_policy` | `retain` | `retain` or `remove` — what to do with router certs when the Secret is deleted |
 | `ssh_port` | `22` | Default SSH port for all routers |
@@ -120,6 +122,22 @@ All config fields can be overridden with environment variables prefixed with `CE
 CERTCTL_LOG_LEVEL=debug
 CERTCTL_SSH_PORT=2222
 ```
+
+## Security & RBAC Scoping
+
+To adhere to the principle of least privilege, `mikrotik-cert-controller` can be deployed in either **Namespace-scoped** mode or **Cluster-scoped** mode:
+
+### 1. Namespace-scoped Mode (Recommended & Default)
+In this mode, the operator has access to read Secrets and manage leader election resources *only* within the local deployment namespace (e.g. `mikrotik-certs`).
+- Uses `rbac-namespace.yaml` (which defines local `Role` and `RoleBinding`).
+- Configure `watch_namespace` (or env variable `CERTCTL_WATCH_NAMESPACE`) to the target namespace to optimize operator runtime cache.
+
+### 2. Cluster-scoped Mode
+In this mode, the operator has access to watch and synchronize Secrets across the entire cluster.
+- Uses `rbac-cluster.yaml` (which defines a `ClusterRole` and `ClusterRoleBinding`).
+- Leave `watch_namespace` empty.
+
+To choose which RBAC version is applied during deployment, see `k8s/kustomization.yaml` or `deploy/kustomize/base/kustomization.yaml` and adjust the active resource.
 
 ## How it works
 
