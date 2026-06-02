@@ -66,14 +66,22 @@ func run(configFile string) error {
 	}
 
 	// Setup controller manager
-	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
-		Cache: cache.Options{
-			ByObject: map[client.Object]cache.ByObject{
-				&corev1.Secret{}: {
-					Label: selector,
-				},
+	cacheOpts := cache.Options{
+		ByObject: map[client.Object]cache.ByObject{
+			&corev1.Secret{}: {
+				Label: selector,
 			},
 		},
+	}
+	if cfg.WatchNamespace != "" {
+		logger.Info("restricting cache to watch namespace", "namespace", cfg.WatchNamespace)
+		cacheOpts.DefaultNamespaces = map[string]cache.Config{
+			cfg.WatchNamespace: {},
+		}
+	}
+
+	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
+		Cache:                  cacheOpts,
 		HealthProbeBindAddress: ":8081",
 		Metrics: metricsserver.Options{
 			BindAddress: ":8080",

@@ -78,6 +78,32 @@ routers:
 	if cfg.DeletePolicy != "retain" {
 		t.Errorf("DeletePolicy = %q, want default %q", cfg.DeletePolicy, "retain")
 	}
+	if cfg.WatchNamespace != "" {
+		t.Errorf("WatchNamespace = %q, want default %q", cfg.WatchNamespace, "")
+	}
+}
+
+func TestLoad_WatchNamespace(t *testing.T) {
+	path := writeTestConfig(t, `
+watch_namespace: mikrotik-certs
+ssh_key:
+  secret_name: my-key
+  secret_namespace: default
+insecure_ignore_host_key: true
+routers:
+  - name: r1
+    address: 10.0.0.1
+    username: admin
+`)
+
+	cfg, err := Load(path)
+	if err != nil {
+		t.Fatalf("Load() error = %v", err)
+	}
+
+	if cfg.WatchNamespace != "mikrotik-certs" {
+		t.Errorf("WatchNamespace = %q, want %q", cfg.WatchNamespace, "mikrotik-certs")
+	}
 }
 
 func TestValidate_NoRouters(t *testing.T) {

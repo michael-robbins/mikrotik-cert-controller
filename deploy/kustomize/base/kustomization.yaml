@@ -3,6 +3,9 @@ kind: Kustomization
 
 resources:
   - deployment.yaml
-  - rbac.yaml
+  # Use rbac-namespace.yaml for namespace-scoped deployment (Recommended)
+  # Or use rbac-cluster.yaml if cluster-wide Secrets access is required
+  - rbac-namespace.yaml
+  #- rbac-cluster.yaml
   - configmap.yaml
   - service.yaml

@@ -5,7 +5,10 @@ namespace: mikrotik-cert-controller
 
 resources:
   - namespace.yaml
-  - rbac.yaml
+  # Use rbac-namespace.yaml for namespace-scoped deployment (Recommended)
+  # Or use rbac-cluster.yaml if cluster-wide Secrets access is required
+  - rbac-namespace.yaml
+  #- rbac-cluster.yaml
   - deployment.yaml
   - service.yaml
 

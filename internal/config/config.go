@@ -12,10 +12,11 @@ import (
 
 // Config holds the full application configuration.
 type Config struct {
-	LogLevel      string        `mapstructure:"log_level"`
-	LabelSelector string        `mapstructure:"label_selector"`
-	SyncPeriod    time.Duration `mapstructure:"sync_period"`
-	DeletePolicy  string        `mapstructure:"delete_policy"`
+	LogLevel       string        `mapstructure:"log_level"`
+	LabelSelector  string        `mapstructure:"label_selector"`
+	SyncPeriod     time.Duration `mapstructure:"sync_period"`
+	DeletePolicy   string        `mapstructure:"delete_policy"`
+	WatchNamespace string        `mapstructure:"watch_namespace"`
 	// KnownHostsFile is an optional path to a known_hosts file used for SSH host key verification.
 	// If empty, host key verification is disabled only when InsecureIgnoreHostKey is true.
 	KnownHostsFile string `mapstructure:"known_hosts_file"`
@@ -76,6 +77,7 @@ func Load(path string) (*Config, error) {
 	v.SetDefault("label_selector", "cert-controller.mikrotik.io/enabled=true")
 	v.SetDefault("sync_period", "1h")
 	v.SetDefault("delete_policy", "retain")
+	v.SetDefault("watch_namespace", "")
 	v.SetDefault("known_hosts_file", "")
 	v.SetDefault("insecure_ignore_host_key", false)
 	v.SetDefault("ssh_port", 22)
