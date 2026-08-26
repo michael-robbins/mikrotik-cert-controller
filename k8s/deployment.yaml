@@ -62,9 +62,6 @@ spec:
             - name: config
               mountPath: /etc/cert-controller
               readOnly: true
-            - name: ssh-key
-              mountPath: /etc/cert-controller/ssh
-              readOnly: true
       volumes:
         - name: config
           configMap:
@@ -74,7 +71,3 @@ spec:
                 path: config.yaml
               - key: known_hosts
                 path: known_hosts
-        - name: ssh-key
-          secret:
-            secretName: mikrotik-cert-controller-ssh-key
-            optional: true
