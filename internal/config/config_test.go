@@ -78,6 +78,92 @@ routers:
 	if cfg.DeletePolicy != "retain" {
 		t.Errorf("DeletePolicy = %q, want default %q", cfg.DeletePolicy, "retain")
 	}
+	if cfg.MetricsBindAddress != ":8080" {
+		t.Errorf("MetricsBindAddress = %q, want default %q", cfg.MetricsBindAddress, ":8080")
+	}
+	if cfg.HealthProbeBindAddress != ":8081" {
+		t.Errorf("HealthProbeBindAddress = %q, want default %q", cfg.HealthProbeBindAddress, ":8081")
+	}
+}
+
+func TestLoad_BindAddressesFromYAML(t *testing.T) {
+	path := writeTestConfig(t, `
+metrics_bind_address: 127.0.0.1:19080
+health_probe_bind_address: 127.0.0.1:19081
+ssh_key:
+  secret_name: my-key
+  secret_namespace: default
+insecure_ignore_host_key: true
+routers:
+  - name: r1
+    address: 10.0.0.1
+    username: admin
+`)
+
+	cfg, err := Load(path)
+	if err != nil {
+		t.Fatalf("Load() error = %v", err)
+	}
+
+	if cfg.MetricsBindAddress != "127.0.0.1:19080" {
+		t.Errorf("MetricsBindAddress = %q, want %q", cfg.MetricsBindAddress, "127.0.0.1:19080")
+	}
+	if cfg.HealthProbeBindAddress != "127.0.0.1:19081" {
+		t.Errorf("HealthProbeBindAddress = %q, want %q", cfg.HealthProbeBindAddress, "127.0.0.1:19081")
+	}
+}
+
+func TestLoad_BindAddressesFromEnv(t *testing.T) {
+	path := writeTestConfig(t, `
+metrics_bind_address: ":8080"
+ssh_key:
+  secret_name: my-key
+  secret_namespace: default
+insecure_ignore_host_key: true
+routers:
+  - name: r1
+    address: 10.0.0.1
+    username: admin
+`)
+
+	t.Setenv("CERTCTL_METRICS_BIND_ADDRESS", ":19080")
+	t.Setenv("CERTCTL_HEALTH_PROBE_BIND_ADDRESS", ":19081")
+
+	cfg, err := Load(path)
+	if err != nil {
+		t.Fatalf("Load() error = %v", err)
+	}
+
+	if cfg.MetricsBindAddress != ":19080" {
+		t.Errorf("MetricsBindAddress = %q, want %q", cfg.MetricsBindAddress, ":19080")
+	}
+	if cfg.HealthProbeBindAddress != ":19081" {
+		t.Errorf("HealthProbeBindAddress = %q, want %q", cfg.HealthProbeBindAddress, ":19081")
+	}
+}
+
+func TestValidate_BindAddress(t *testing.T) {
+	tests := []struct {
+		name    string
+		addr    string
+		wantErr bool
+	}{
+		{name: "port only", addr: ":8080"},
+		{name: "host and port", addr: "127.0.0.1:8080"},
+		{name: "disabled", addr: "0"},
+		{name: "empty", addr: "", wantErr: true},
+		{name: "no port", addr: "127.0.0.1", wantErr: true},
+		{name: "not an address", addr: "8080", wantErr: true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := validateBindAddress("metrics_bind_address", tt.addr)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("validateBindAddress(%q) error = %v, wantErr %v", tt.addr, err, tt.wantErr)
+			}
+		})
+	}
 }
 
 func TestValidate_NoRouters(t *testing.T) {
