@@ -89,6 +89,8 @@ The operator will detect the labeled Secret and sync the certificate to all conf
 | `watch_namespace` | | Restricts the operator to watching Secrets in a single namespace (e.g. `mikrotik-certs`). If empty, watches all namespaces (cluster-scoped). |
 | `sync_period` | `1h` | How often to re-check all Secrets |
 | `delete_policy` | `retain` | `retain` or `remove` — what to do with router certs when the Secret is deleted |
+| `metrics_bind_address` | `:8080` | Address the Prometheus metrics server listens on. `0` disables it |
+| `health_probe_bind_address` | `:8081` | Address the health/readiness probe server listens on. `0` disables it |
 | `ssh_port` | `22` | Default SSH port for all routers |
 | `ssh_key` | | Global SSH key Secret reference |
 | `known_hosts_file` | | Path to known_hosts file for SSH host key verification |
@@ -121,6 +123,8 @@ All config fields can be overridden with environment variables prefixed with `CE
 ```bash
 CERTCTL_LOG_LEVEL=debug
 CERTCTL_SSH_PORT=2222
+CERTCTL_METRICS_BIND_ADDRESS=:9080
+CERTCTL_HEALTH_PROBE_BIND_ADDRESS=:9081
 ```
 
 ## Security & RBAC Scoping
@@ -157,7 +161,9 @@ To choose which RBAC version is applied during deployment, see `k8s/kustomizatio
 
 ## Metrics
 
-Available on `:8080/metrics`:
+Served on `:8080/metrics` by default. Change the address with `metrics_bind_address`
+(or `CERTCTL_METRICS_BIND_ADDRESS`) — needed when running with `hostNetwork: true` on a
+node where port 8080 is already taken — or set it to `0` to disable the metrics server.
 
 | Metric | Type | Labels | Description |
 |--------|------|--------|-------------|

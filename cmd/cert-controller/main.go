@@ -82,9 +82,9 @@ func run(configFile string) error {
 
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Cache:                  cacheOpts,
-		HealthProbeBindAddress: ":8081",
+		HealthProbeBindAddress: cfg.HealthProbeBindAddress,
 		Metrics: metricsserver.Options{
-			BindAddress: ":8080",
+			BindAddress: cfg.MetricsBindAddress,
 		},
 	})
 	if err != nil {
@@ -128,6 +128,8 @@ func run(configFile string) error {
 		"routers", len(cfg.Routers),
 		"sync_period", cfg.SyncPeriod,
 		"delete_policy", cfg.DeletePolicy,
+		"metrics_bind_address", cfg.MetricsBindAddress,
+		"health_probe_bind_address", cfg.HealthProbeBindAddress,
 	)
 
 	return mgr.Start(ctrl.SetupSignalHandler())
